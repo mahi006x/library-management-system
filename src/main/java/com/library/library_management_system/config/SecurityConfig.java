@@ -1,5 +1,5 @@
 	package com.library.library_management_system.config;
-	
+	import org.springframework.http.HttpMethod;
 	import com.library.library_management_system.security.JwtFilter;
 	
 	import org.springframework.context.annotation.Bean;
@@ -40,6 +40,7 @@
 	            .csrf(csrf -> csrf.disable())
 	            .authorizeHttpRequests(auth -> auth
 	                    .requestMatchers("/api/auth/**").permitAll()
+	                    .requestMatchers(HttpMethod.GET, "/api/books/**").permitAll()
 	                    .anyRequest().authenticated()
 	            )
 	            .sessionManagement(session -> session
