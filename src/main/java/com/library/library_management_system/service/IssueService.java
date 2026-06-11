@@ -1,17 +1,20 @@
 package com.library.library_management_system.service;
 
 import com.library.library_management_system.model.Book;
+import com.library.library_management_system.model.Fine;
 import com.library.library_management_system.model.IssueRecord;
 import com.library.library_management_system.model.IssueStatus;
 import com.library.library_management_system.model.User;
 
 import com.library.library_management_system.repository.BookRepository;
+import com.library.library_management_system.repository.FineRepository;
 import com.library.library_management_system.repository.IssueRepository;
 import com.library.library_management_system.repository.UserRepository;
 
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @Service
@@ -20,15 +23,18 @@ public class IssueService {
     private final IssueRepository issueRepository;
     private final UserRepository userRepository;
     private final BookRepository bookRepository;
+    private final FineRepository fineRepository;
 
     public IssueService(
             IssueRepository issueRepository,
             UserRepository userRepository,
-            BookRepository bookRepository
+            BookRepository bookRepository,
+            FineRepository fineRepository
     ) {
         this.issueRepository = issueRepository;
         this.userRepository = userRepository;
         this.bookRepository = bookRepository;
+        this.fineRepository = fineRepository;
     }
 
     public IssueRecord requestIssue(Long userId, Long bookId) {
@@ -93,7 +99,22 @@ public class IssueService {
         issueRecord.setStatus(IssueStatus.RETURNED);
         issueRecord.setReturnDate(LocalDate.now());
 
-        return issueRepository.save(issueRecord);
+        IssueRecord savedIssue = issueRepository.save(issueRecord);
+
+        long daysOverdue = ChronoUnit.DAYS.between(
+                issueRecord.getDueDate(),
+                LocalDate.now()
+        );
+
+        if (daysOverdue > 0) {
+            Fine fine = new Fine();
+            fine.setIssueRecord(savedIssue);
+            fine.setAmount(daysOverdue * 2.0);
+            fine.setPaid(false);
+            fineRepository.save(fine);
+        }
+
+        return savedIssue;
     }
 
     public List<IssueRecord> getUserIssues(Long userId) {
