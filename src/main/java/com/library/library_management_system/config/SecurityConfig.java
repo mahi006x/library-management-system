@@ -1,25 +1,19 @@
 package com.library.library_management_system.config;
 
-import org.springframework.http.HttpMethod;
-
 import com.library.library_management_system.security.JwtFilter;
-
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
-
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
@@ -32,7 +26,6 @@ public class SecurityConfig {
     public SecurityConfig(
             JwtFilter jwtFilter,
             UserDetailsService userDetailsService) {
-
         this.jwtFilter = jwtFilter;
         this.userDetailsService = userDetailsService;
     }
@@ -42,20 +35,21 @@ public class SecurityConfig {
             throws Exception {
 
         http
+            .cors(Customizer.withDefaults())
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                    .requestMatchers("/api/auth/**").permitAll()
-                    .requestMatchers(HttpMethod.GET, "/api/books/**").permitAll()
-                    .requestMatchers("/api/issues/**").permitAll()
-                    .requestMatchers("/api/fines/**").permitAll()
-                    .anyRequest().authenticated()
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/books/**").permitAll()
+                .requestMatchers("/api/issues/**").permitAll()
+                .requestMatchers("/api/fines/**").permitAll()
+                .anyRequest().authenticated()
             )
-            .sessionManagement(session -> session
-                    .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-            )
+            .sessionManagement(session ->
+                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .addFilterBefore(
-                    jwtFilter,
-                    UsernamePasswordAuthenticationFilter.class
+                jwtFilter,
+                UsernamePasswordAuthenticationFilter.class
             );
 
         return http.build();
@@ -63,11 +57,11 @@ public class SecurityConfig {
 
     @Bean
     public AuthenticationManager authenticationManager() {
-
         return authentication -> {
 
             String email = authentication.getName();
-            String password = authentication.getCredentials().toString();
+            String password =
+                    authentication.getCredentials().toString();
 
             UserDetails userDetails =
                     userDetailsService.loadUserByUsername(email);
@@ -77,8 +71,7 @@ public class SecurityConfig {
                     userDetails.getPassword())) {
 
                 throw new BadCredentialsException(
-                        "Invalid email or password"
-                );
+                        "Invalid email or password");
             }
 
             return new UsernamePasswordAuthenticationToken(

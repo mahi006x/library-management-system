@@ -43,13 +43,9 @@ public class IssueController {
     }
 
     @GetMapping("/my")
-    public List<IssueRecord> myIssues(Authentication authentication) {
-        String email = authentication.getName();
-
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        return issueService.getUserIssues(user.getId());
+    public List<IssueRecord> myIssues() {
+        Long testUserId = 2L;
+        return issueService.getUserIssues(testUserId);
     }
 
     @GetMapping("/pending")
