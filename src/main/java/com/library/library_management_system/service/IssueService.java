@@ -87,13 +87,24 @@ public class IssueService {
         IssueRecord issueRecord = issueRepository.findById(issueId)
                 .orElseThrow(() -> new RuntimeException("Issue record not found"));
 
+        if (issueRecord.getStatus() == IssueStatus.RETURNED) {
+            throw new RuntimeException("Book already returned");
+        }
+
         if (issueRecord.getStatus() != IssueStatus.APPROVED &&
                 issueRecord.getStatus() != IssueStatus.OVERDUE) {
             throw new RuntimeException("Only approved or overdue books can be returned");
         }
 
         Book book = issueRecord.getBook();
-        book.setAvailableCopies(book.getAvailableCopies() + 1);
+
+        int newAvailable = book.getAvailableCopies() + 1;
+
+        if (newAvailable > book.getTotalCopies()) {
+            newAvailable = book.getTotalCopies();
+        }
+
+        book.setAvailableCopies(newAvailable);
         bookRepository.save(book);
 
         issueRecord.setStatus(IssueStatus.RETURNED);

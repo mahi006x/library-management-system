@@ -2,6 +2,7 @@ package com.library.library_management_system.repository;
 
 import com.library.library_management_system.model.IssueRecord;
 import com.library.library_management_system.model.IssueStatus;
+import org.springframework.data.jpa.repository.Query;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -18,4 +19,11 @@ public interface IssueRepository extends JpaRepository<IssueRecord, Long> {
             LocalDate date,
             IssueStatus status
     );
+    @Query("""
+    		SELECT COUNT(i)
+    		FROM IssueRecord i
+    		WHERE i.dueDate < CURRENT_DATE
+    		AND i.status = 'APPROVED'
+    		""")
+    		Long getOverdueIssuesCount();
 }
