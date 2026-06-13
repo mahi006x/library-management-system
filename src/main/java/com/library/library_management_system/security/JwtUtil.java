@@ -8,20 +8,23 @@ import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Date;
 
 @Component
 public class JwtUtil {
 
-    @Value("${jwt.secret}")
+    @Value("${jwt.secret:library_management_system_secret_key_2026_very_long_secure_value}")
     private String secret;
 
-    @Value("${jwt.expiration}")
+    @Value("${jwt.expiration:86400000}")
     private long expiration;
 
     private Key getSigningKey() {
-        return Keys.hmacShaKeyFor(secret.getBytes());
+        return Keys.hmacShaKeyFor(
+                secret.getBytes(StandardCharsets.UTF_8)
+        );
     }
 
     public String generateToken(String email, String role) {
@@ -29,7 +32,9 @@ public class JwtUtil {
                 .setSubject(email)
                 .claim("role", role)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + expiration))
+                .setExpiration(
+                        new Date(System.currentTimeMillis() + expiration)
+                )
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
@@ -40,7 +45,9 @@ public class JwtUtil {
 
     public boolean validateToken(String token) {
         try {
-            return extractClaims(token).getExpiration().after(new Date());
+            return extractClaims(token)
+                    .getExpiration()
+                    .after(new Date());
         } catch (Exception e) {
             return false;
         }
