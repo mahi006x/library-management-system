@@ -1,12 +1,14 @@
 package com.library.library_management_system.dto;
 
+import jakarta.validation.constraints.NotBlank;
+
 public class LoginRequest {
 
+    @NotBlank(message = "Email is required")
     private String email;
-    private String password;
 
-    public LoginRequest() {
-    }
+    @NotBlank(message = "Password is required")
+    private String password;
 
     public String getEmail() {
         return email;
